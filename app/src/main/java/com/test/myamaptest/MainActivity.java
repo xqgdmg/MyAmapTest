@@ -41,7 +41,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- *  限制地图范围的功能没有做，有时间再进行处理了
+ *
  * */
 public class MainActivity extends AppCompatActivity implements LocationSource, AMapLocationListener, AMap.CancelableCallback, AMap.OnMapClickListener, GeocodeSearch.OnGeocodeSearchListener {
 
