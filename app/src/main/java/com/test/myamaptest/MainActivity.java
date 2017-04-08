@@ -11,13 +11,13 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMapOptions;
+import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
@@ -40,6 +40,9 @@ import com.amap.api.services.geocoder.RegeocodeResult;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ *  限制地图范围的功能没有做，有时间再进行处理了
+ * */
 public class MainActivity extends AppCompatActivity implements LocationSource, AMapLocationListener, AMap.CancelableCallback, AMap.OnMapClickListener, GeocodeSearch.OnGeocodeSearchListener {
 
     MapView mMapView = null;
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements LocationSource, A
     private LatLng latLng;
     private String mPlaceName;
     private boolean isClickAMap = false;
+    private LatLng currentLatLng; // 当前的位置，每次位置改变更新
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -284,6 +288,9 @@ public class MainActivity extends AppCompatActivity implements LocationSource, A
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (mListener != null && aMapLocation != null) {
+             // 保存当前的位置
+            currentLatLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
+
             if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
 //                mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
                 //定位成功回调信息，设置相关消息
@@ -367,6 +374,12 @@ public class MainActivity extends AppCompatActivity implements LocationSource, A
      * */
     @Override
     public void onMapClick(LatLng latLng) {
+         // 判断地图的范围
+        if (!laLngIsEnable(latLng)){
+            return;
+        }
+
+
         if (marker != null) {
             marker.remove();
         }
@@ -380,6 +393,26 @@ public class MainActivity extends AppCompatActivity implements LocationSource, A
         
         geocoderSearch.getFromLocationAsyn(query);
         geocoderSearch.setOnGeocodeSearchListener(this);
+    }
+
+    /**
+     *  判断点击的位置有没有超过允许的范围
+     *  通过点击位置和当前的位置对比
+     * */
+    private boolean laLngIsEnable(LatLng latLng2) {
+
+        if (currentLatLng==null ){
+            Toast.makeText(MainActivity.this,"正在定位中。。。请稍后",Toast.LENGTH_LONG).show();
+            return false;
+        }
+
+        if (AMapUtils.calculateLineDistance(currentLatLng, latLng2) > 5000){  // AMapUtils 是高德系统的 APi
+            Toast.makeText(MainActivity.this,"超过最大距离，最大距离为5000~",Toast.LENGTH_LONG).show();
+            return false;
+        }
+
+        return true;
+
     }
 
     /**
